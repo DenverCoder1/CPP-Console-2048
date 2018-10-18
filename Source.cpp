@@ -1,4 +1,4 @@
-// 2048 main file - Arrow key controls and clearing of console
+﻿// 2048 main file - Arrow key controls and clearing of console
 //
 
 #include "iostream"
@@ -522,7 +522,7 @@ void theBoard::readBestScore() {
 			bestScoreString += letter;
 		}
 		if (bestScoreString.size() > 1) { // not blank file
-			bestScore = stoi(bestScoreString);
+			bestScore = stoi(bestScoreString); 
 		}
 		fileIn.close();
 	}

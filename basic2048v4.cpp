@@ -14,27 +14,26 @@ typedef vector <boardRow> boardGrid; // vector of vectors
 
 class theBoard {
 private:
-	bool alreadyWon = false;
-	int score = 0;
-	int bestScore = 0;
-	int moves = 0;
-	int gridSize;
-	boardGrid board;
-	boardGrid boardCopy;
+	bool alreadyWon = false; // if already got 2048, don't ask for continue again
+	int score = 0; // sum of all tiles merged (ex +8 if merged a 4 and 4)
+	int bestScore = 0; // highscore
+	int moves = 0; // number of times grid was shifted in a single game
+	int gridSize; // number of rows/columns in current grid
+	boardGrid board; // the grid
+	boardGrid boardCopy; // backup of grid to allow user to undo a move
 public:
-	void printBoard();
-	int checkIfGameOver();
-	int beginMove();
-	void setup();
-	void shiftGrid(char dir);
-	void setBestScore(string bestScoreString);
-	void readBestScore();
-	void saveBestScore();
+	void printBoard(); // output grid to console
+	int checkIfGameOver(); // check if no moves or got first 2048 tile
+	int beginMove(); // wait for input
+	void setup(); // ask for grid size, set up grid
+	void shiftGrid(char dir); // change grid by moving U, D, L, or R
+	void readBestScore(); // set bestScore variable to score from bestscore.txt file
+	void saveBestScore(); // output bestScore to bestscore.txt file
 };
 
 void theBoard::printBoard() {
-	string currentRow;
-	string currentCell;
+	string currentRow; // text string of a row of numbers in the grid
+	string currentCell; // value of cell at grid coordinate as a string
 	cout << endl;
 	// top of table:
 	cout << " +";
@@ -134,10 +133,11 @@ int theBoard::checkIfGameOver() {
 			}
 		}
 		if (playAgain == "Y" || playAgain == "YES") {
-			return 1; // play again
+			printBoard();
+			return 0; // continue playing
 		}
 		else if (playAgain == "N" || playAgain == "NO") {
-			return -1; // exit
+			return 1; // play again
 		}
 	}
 	if (numOfValues == gridSize * gridSize) { // grid is full
@@ -333,13 +333,13 @@ void theBoard::shiftGrid(char dir) {
 		do {
 			tempRow = rand() % gridSize;
 			tempCol = rand() % gridSize;
-		} while (board[tempRow][tempCol] >= 2);
+		} while (board[tempRow][tempCol] >= 2); // make sure random location is empty
 		int startInt = (rand() % 10 < 9) ? 2 : 4; // 10% chance of 4
 		board[tempRow][tempCol] = startInt;
 		moves++; // add 1 to moves
 	}
 
-	bestScore = score > bestScore ? score : bestScore;
+	bestScore = score > bestScore ? score : bestScore; // set bestScore to score if score is larger
 }
 
 int theBoard::beginMove() {
@@ -435,15 +435,11 @@ void theBoard::setup() {
 			tempRow = rand() % gridSize;
 			tempCol = rand() % gridSize;
 			i++;
-		} while (board[tempRow][tempCol] >= 2 && i < gridSize * gridSize);
+		} while (board[tempRow][tempCol] >= 2); // make sure random location is empty
 		int startInt = (rand() % 10 < 9) ? 2 : 4; // 10% chance of 4
 		board[tempRow][tempCol] = startInt;
 	}
 }
-
-void theBoard::setBestScore(string bestScoreString) {
-	bestScore = stoi(bestScoreString);
-};
 
 void theBoard::readBestScore() {
 	string bestScoreString = "";
@@ -454,8 +450,8 @@ void theBoard::readBestScore() {
 			fileIn.get(letter);
 			bestScoreString += letter;
 		}
-		if (bestScoreString.size() > 1) {
-			setBestScore(bestScoreString);
+		if (bestScoreString.size() > 1) { // not blank file
+			bestScore = stoi(bestScoreString);
 		}
 		fileIn.close();
 	}
@@ -464,25 +460,25 @@ void theBoard::readBestScore() {
 void theBoard::saveBestScore() {
 	ofstream fileOut("bestscore.txt");
 	if (fileOut) {
-		fileOut << bestScore << endl;
+		fileOut << bestScore << endl; // write bestScore to file
 		fileOut.close();
 	}
 }
 
 int main() {
 	srand((unsigned int)time(NULL)); // reset timer for better rng
-	theBoard newBoard;
+	theBoard newBoard; // create object "newBoard" with class "theBoard"
 	newBoard.setup(); // call function to set up game
-	newBoard.readBestScore();
-	int GameOver = false;
+	newBoard.readBestScore(); // set bestScore variable
+	int GameOver = 0;
 	while (true) {
 		// print board:
-		newBoard.printBoard();
-		GameOver = newBoard.checkIfGameOver();
+		newBoard.printBoard(); // output grid
+		GameOver = newBoard.checkIfGameOver(); // check if won or lost (returns 0:continue, 1:new game, or -1:exit)
 		if (GameOver == 0) { // continue playing
-			GameOver = newBoard.beginMove();
+			GameOver = newBoard.beginMove(); // wait for input (returns 0:continue or 1:new game)
 		}
-		if (GameOver == 1) { // play again
+		if (GameOver == 1) { // new game
 			newBoard.setup();
 		}
 		else if (GameOver == -1) { // exit
