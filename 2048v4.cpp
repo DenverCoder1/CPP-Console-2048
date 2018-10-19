@@ -25,9 +25,9 @@ private:
 public:
 	void printBoard(); // output grid to console
 	int checkIfGameOver(); // check if no moves or got first 2048 tile
+	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	int beginMove(); // wait for input
 	void setup(); // ask for grid size, set up grid
-	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	void readBestScore(); // set bestScore variable to score from bestscore.txt file
 	void saveBestScore(); // output bestScore to bestscore.txt file
 };
@@ -182,7 +182,8 @@ int theBoard::checkIfGameOver() {
 }
 
 void theBoard::shiftGrid(char dir) {
-	boardCopy = board;
+	boardGrid boardCopyCopy = boardCopy; // create backup of backup in case no move is made
+	boardCopy = board; // create backup of board
 	bool nothingMoved = true; // if no moves, won't add a number
 	// SHIFT UP:
 	if (dir == 'U') {
@@ -340,6 +341,9 @@ void theBoard::shiftGrid(char dir) {
 		int startInt = (rand() % 10 < 9) ? 2 : 4; // 10% chance of 4
 		board[tempRow][tempCol] = startInt;
 		moves++; // add 1 to moves
+	}
+	else { // if nothing moved
+		boardCopy = boardCopyCopy; // go back to previous backup to allow undo
 	}
 
 	bestScore = score > bestScore ? score : bestScore; // set bestScore to score if score is larger

@@ -24,9 +24,9 @@ private:
 public:
 	void printBoard(); // output grid to console
 	int checkIfGameOver(); // check if no moves or got first 2048 tile
+	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	int beginMove(); // wait for input
 	void setup(); // ask for grid size, set up grid
-	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	void readBestScore(); // set bestScore variable to score from bestscore.txt file
 	void saveBestScore(); // output bestScore to bestscore.txt file
 };
@@ -179,6 +179,7 @@ int theBoard::checkIfGameOver() {
 }
 
 void theBoard::shiftGrid(char dir) {
+	boardGrid boardCopyCopy = boardCopy; // create backup of backup in case no move is made
 	boardCopy = board;
 	bool nothingMoved = true; // if no moves, won't add a number
 	// SHIFT UP:
@@ -338,6 +339,9 @@ void theBoard::shiftGrid(char dir) {
 		board[tempRow][tempCol] = startInt;
 		moves++; // add 1 to moves
 	}
+	else { // if nothing moved
+		boardCopy = boardCopyCopy; // go back to previous backup to allow undo
+	}
 
 	bestScore = score > bestScore ? score : bestScore; // set bestScore to score if score is larger
 }
@@ -407,7 +411,7 @@ void theBoard::setup() {
 	gridSize = 0;
 	alreadyWon = false;
 	cout << " Join the numbers and get to the 2048 tile!" << endl;
-	cout << " HOW TO PLAY: Use your arrow keys to move the tiles." << endl;
+	cout << " HOW TO PLAY: Use WASD input to move the tiles." << endl;
 	cout << " When two tiles with the same number touch, they merge into one!" << endl;
 	cout << " Press \"n\" to start a new game or \"u\" to undo." << endl << endl;
 	while (true) {
