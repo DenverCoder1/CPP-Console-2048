@@ -4,11 +4,28 @@
 #include "iostream"
 #include "string"
 #include "vector" // to store grid values
-#include "conio.h" // for arrow keys (_getch)
 #include "ctime" // for better rng
 #include "climits" // for INT_MAX in int validation
 #include "fstream" // for saving highscore
 using namespace std;
+
+#ifdef __unix__
+	int _getch() { return 0; } // overload _getch() to return false
+	#include <unistd.h>
+	#include <term.h>
+	void clearScreen()	{
+		cout << string(100, '\n');
+	}
+#elif defined(_WIN32) || defined(WIN32)
+	#include "conio.h" // for arrow keys (_getch)
+	void clearScreen() {
+		system("CLS");
+	}
+#else
+	void clearScreen() {
+		system("clear||CLS");
+	}
+#endif
 
 typedef vector <int> boardRow; // one row as vector
 typedef vector <boardRow> boardGrid; // vector of vectors
@@ -25,15 +42,15 @@ private:
 public:
 	void printBoard(); // output grid to console
 	int checkIfGameOver(); // check if no moves or got first 2048 tile
+	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	int beginMove(); // wait for input
 	void setup(); // ask for grid size, set up grid
-	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	void readBestScore(); // set bestScore variable to score from bestscore.txt file
 	void saveBestScore(); // output bestScore to bestscore.txt file
 };
 
 void theBoard::printBoard() {
-	system("CLS"); // clear screen
+	clearScreen(); // clear screen
 	string currentRow; // text string of a row of numbers in the grid
 	string currentCell; // value of cell at grid coordinate as a string
 	cout << " Join the numbers and get to the 2048 tile!" << endl;
@@ -182,7 +199,8 @@ int theBoard::checkIfGameOver() {
 }
 
 void theBoard::shiftGrid(char dir) {
-	boardCopy = board;
+	boardGrid boardCopyCopy = boardCopy; // create backup of backup in case no move is made
+	boardCopy = board; // create backup of board
 	bool nothingMoved = true; // if no moves, won't add a number
 	// SHIFT UP:
 	if (dir == 'U') {
@@ -341,132 +359,138 @@ void theBoard::shiftGrid(char dir) {
 		board[tempRow][tempCol] = startInt;
 		moves++; // add 1 to moves
 	}
+	else { // if nothing moved
+		boardCopy = boardCopyCopy; // go back to previous backup to allow undo
+	}
 
 	bestScore = score > bestScore ? score : bestScore; // set bestScore to score if score is larger
 }
 
 int theBoard::beginMove() {
-	/* Non-standard input method using <conio.h> and _getch(): */
-	string playAgain;
-	bool keyPressed = false;
-	// See key scan codes: https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-6.0/aa299374(v=vs.60)
-	while (!keyPressed) {
-		switch (_getch()) { // wait for key to be pressed
-		case 72: //KEY UP
-			shiftGrid('U');
-			keyPressed = true;
-			break;
-		case 77: //KEY RIGHT
-			shiftGrid('R');
-			keyPressed = true;
-			break;
-		case 80: //KEY DOWN
-			shiftGrid('D');
-			keyPressed = true;
-			break;
-		case 75: //KEY LEFT
-			shiftGrid('L');
-			keyPressed = true;
-			break;
-		case 110: //KEY 'n' (new game)
-			playAgain = "";
-			cout << endl << " Are you sure you want to start a new game?" << endl;
-			while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-				cout << " New Game? (Y/N) ";
-				cin >> playAgain;
-				int responseLength = playAgain.length();
-				for (int i = 0; i < responseLength; i++) {
-					playAgain.at(i) = toupper(playAgain.at(i));
-				}
-			}
-			if (playAgain == "Y" || playAgain == "YES") {
-				saveBestScore();
-				cout << endl;
-				return 1; // play again
+	if (_getch()) { // if able to run _getch
+		/* Non-standard input method using <conio.h> and _getch(): */
+		string playAgain;
+		bool keyPressed = false;
+		// See key scan codes: https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-6.0/aa299374(v=vs.60)
+		while (!keyPressed) {
+			switch (_getch()) { // wait for key to be pressed
+			case 72: //KEY UP
+				shiftGrid('U');
 				keyPressed = true;
-			}
-			break;
-		case 117: //KEY 'u' (undo)
-			playAgain = "";
-			cout << endl << " Are you sure you want to undo?" << endl;
-			while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-				cout << " Undo? (Y/N) ";
-				cin >> playAgain;
-				int responseLength = playAgain.length();
-				for (int i = 0; i < responseLength; i++) {
-					playAgain.at(i) = toupper(playAgain.at(i));
+				break;
+			case 77: //KEY RIGHT
+				shiftGrid('R');
+				keyPressed = true;
+				break;
+			case 80: //KEY DOWN
+				shiftGrid('D');
+				keyPressed = true;
+				break;
+			case 75: //KEY LEFT
+				shiftGrid('L');
+				keyPressed = true;
+				break;
+			case 110: //KEY 'n' (new game)
+				playAgain = "";
+				cout << endl << " Are you sure you want to start a new game?" << endl;
+				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+					cout << " New Game? (Y/N) ";
+					cin >> playAgain;
+					int responseLength = playAgain.length();
+					for (int i = 0; i < responseLength; i++) {
+						playAgain.at(i) = toupper(playAgain.at(i));
+					}
 				}
-			}
-			if (playAgain == "Y" || playAgain == "YES") {
-				if (board != boardCopy) { // haven't already used backup
-					board = boardCopy;
-					printBoard();
+				if (playAgain == "Y" || playAgain == "YES") {
+					saveBestScore();
+					cout << endl;
+					return 1; // play again
 					keyPressed = true;
 				}
-				else {
-					cout << "Sorry. You may not undo any further." << endl;
+				break;
+			case 117: //KEY 'u' (undo)
+				playAgain = "";
+				cout << endl << " Are you sure you want to undo?" << endl;
+				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+					cout << " Undo? (Y/N) ";
+					cin >> playAgain;
+					int responseLength = playAgain.length();
+					for (int i = 0; i < responseLength; i++) {
+						playAgain.at(i) = toupper(playAgain.at(i));
+					}
 				}
+				if (playAgain == "Y" || playAgain == "YES") {
+					if (board != boardCopy) { // haven't already used backup
+						board = boardCopy;
+						printBoard();
+						keyPressed = true;
+					}
+					else {
+						cout << "Sorry. You may not undo any further." << endl;
+					}
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		default:
-			break;
 		}
 	}
-
-	/* Alternate method using cin instead of _getch (WASD): */
-	//string playAgain;
-	//bool keyPressed = false;
-	//while (!keyPressed) {
-	//	cout << "Choose a direction (WASD): ";
-	//	char dir;
-	//	cin >> dir;
-	//	dir = toupper(dir);
-	//	if (dir == 'N') {
-	//		playAgain = "";
-	//		cout << endl << " Are you sure you want to start a new game?" << endl;
-	//		while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-	//			cout << " New Game? (Y/N) ";
-	//			cin >> playAgain;
-	//			int responseLength = playAgain.length();
-	//			for (int i = 0; i < responseLength; i++) {
-	//				playAgain.at(i) = toupper(playAgain.at(i));
-	//			}
-	//		}
-	//		if (playAgain == "Y" || playAgain == "YES") {
-	//			saveBestScore();
-	//			cout << endl;
-	//			return 1; // play again
-	//			keyPressed = true;
-	//		}
-	//	}
-	//	else if (dir == 'U') {
-	//		playAgain = "";
-	//		cout << endl << " Are you sure you want to undo?" << endl;
-	//		while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-	//			cout << " Undo? (Y/N) ";
-	//			cin >> playAgain;
-	//			int responseLength = playAgain.length();
-	//			for (int i = 0; i < responseLength; i++) {
-	//				playAgain.at(i) = toupper(playAgain.at(i));
-	//			}
-	//		}
-	//		if (playAgain == "Y" || playAgain == "YES") {
-	//			if (board != boardCopy) { // haven't already used backup
-	//				board = boardCopy;
-	//				printBoard();
-	//				keyPressed = true;
-	//			}
-	//			else {
-	//				cout << "Sorry. You may not undo any further." << endl;
-	//			}
-	//		}
-	//	}
-	//	else if (dir == 'W' || dir == 'A' || dir == 'S' || dir == 'D') {
-	//		dir = dir == 'W' ? 'U' : dir == 'A' ? 'L' : dir == 'S' ? 'D' : dir == 'D' ? 'R' : dir; // convert WASD to ULDR:
-	//		shiftGrid(dir);
-	//		keyPressed = true;
-	//	}
-	//}
+	else {
+		/* Alternate method using cin instead of _getch (WASD): */
+		string playAgain;
+		bool keyPressed = false;
+		while (!keyPressed) {
+			cout << "Choose a direction (WASD): ";
+			char dir;
+			cin >> dir;
+			dir = toupper(dir);
+			if (dir == 'N') {
+				playAgain = "";
+				cout << endl << " Are you sure you want to start a new game?" << endl;
+				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+					cout << " New Game? (Y/N) ";
+					cin >> playAgain;
+					int responseLength = playAgain.length();
+					for (int i = 0; i < responseLength; i++) {
+						playAgain.at(i) = toupper(playAgain.at(i));
+					}
+				}
+				if (playAgain == "Y" || playAgain == "YES") {
+					saveBestScore();
+					cout << endl;
+					return 1; // play again
+					keyPressed = true;
+				}
+			}
+			else if (dir == 'U') {
+				playAgain = "";
+				cout << endl << " Are you sure you want to undo?" << endl;
+				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+					cout << " Undo? (Y/N) ";
+					cin >> playAgain;
+					int responseLength = playAgain.length();
+					for (int i = 0; i < responseLength; i++) {
+						playAgain.at(i) = toupper(playAgain.at(i));
+					}
+				}
+				if (playAgain == "Y" || playAgain == "YES") {
+					if (board != boardCopy) { // haven't already used backup
+						board = boardCopy;
+						printBoard();
+						keyPressed = true;
+					}
+					else {
+						cout << "Sorry. You may not undo any further." << endl;
+					}
+				}
+			}
+			else if (dir == 'W' || dir == 'A' || dir == 'S' || dir == 'D') {
+				dir = dir == 'W' ? 'U' : dir == 'A' ? 'L' : dir == 'S' ? 'D' : dir == 'D' ? 'R' : dir; // convert WASD to ULDR:
+				shiftGrid(dir);
+				keyPressed = true;
+			}
+		}
+	}
 
 	return 0; // continue playing
 }
@@ -476,7 +500,6 @@ void theBoard::setup() {
 	moves = 0;
 	gridSize = 0;
 	alreadyWon = false;
-	system("CLS"); // clear screen
 	cout << " Join the numbers and get to the 2048 tile!" << endl;
 	cout << " HOW TO PLAY: Use your arrow keys to move the tiles." << endl;
 	cout << " When two tiles with the same number touch, they merge into one!" << endl;
@@ -484,7 +507,7 @@ void theBoard::setup() {
 	while (true) {
 		cout << " How many rows and columns? ";
 		cin >> gridSize;
-		if (cin.good() && gridSize >= 2 && gridSize <= 16) {
+		if (cin.good() && gridSize >= 2 && gridSize <= 100) {
 			break;
 		}
 		else {
@@ -550,6 +573,7 @@ int main() {
 			GameOver = newBoard.beginMove(); // wait for input (returns 0:continue or 1:new game)
 		}
 		if (GameOver == 1) { // new game
+			clearScreen(); // clear screen
 			newBoard.setup();
 		}
 		else if (GameOver == -1) { // exit
