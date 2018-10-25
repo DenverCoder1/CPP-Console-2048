@@ -1,4 +1,4 @@
-﻿// 2048 main file - Arrow keys (Windows) and WASD (Unix)
+// 2048 main file - Arrow keys (Windows) and WASD (Unix)
 // 
 
 #include "iostream"
