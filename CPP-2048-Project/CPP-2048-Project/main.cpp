@@ -10,15 +10,15 @@
 using namespace std;
 
 #if defined(_WIN32) || defined(WIN32)
-	#include "conio.h" // for arrow keys (_getch)
-	void clearScreen() {
-		system("CLS");
-	}
+#include "conio.h" // for arrow keys (_getch)
+void clearScreen() {
+	system("CLS");
+}
 #else
-	void clearScreen() {
-		cout << string(50, '\n');
-		//system("clear||CLS");
-	}
+void clearScreen() {
+	cout << string(50, '\n');
+	//system("clear||CLS");
+}
 #endif
 
 typedef vector <int> boardRow; // one row as vector
@@ -378,145 +378,145 @@ void theBoard::shiftGrid(char dir) {
 }
 
 int theBoard::beginMove() {
-	#if defined(_WIN32) || defined(WIN32)
-		/* Non-standard input method using <conio.h> and _getch(): */
-		string playAgain;
-		bool keyPressed = false;
-		// See key scan codes: https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-6.0/aa299374(v=vs.60)
-		while (!keyPressed) {
-			switch (_getch()) { // wait for key to be pressed
-			case 72: //KEY UP
-				shiftGrid('W');
-				keyPressed = true;
-				break;
-			case 75: //KEY LEFT
-				shiftGrid('A');
-				keyPressed = true;
-				break;
-			case 80: //KEY DOWN
-				shiftGrid('S');
-				keyPressed = true;
-				break;
-			case 77: //KEY RIGHT
-				shiftGrid('D');
-				keyPressed = true;
-				break;
-			case 110: //KEY 'n' (new game)
-				playAgain = "";
-				cout << endl << " Are you sure you want to start a new game?" << endl;
-				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-					cout << " New Game? (Y/N) ";
-					cin >> playAgain;
-					int responseLength = playAgain.length();
-					for (int i = 0; i < responseLength; i++) {
-						playAgain.at(i) = toupper(playAgain.at(i));
-					}
-					cout << endl;
+#if defined(_WIN32) || defined(WIN32)
+	/* Non-standard input method using <conio.h> and _getch(): */
+	string playAgain;
+	bool keyPressed = false;
+	// See key scan codes: https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-6.0/aa299374(v=vs.60)
+	while (!keyPressed) {
+		switch (_getch()) { // wait for key to be pressed
+		case 72: //KEY UP
+			shiftGrid('W');
+			keyPressed = true;
+			break;
+		case 75: //KEY LEFT
+			shiftGrid('A');
+			keyPressed = true;
+			break;
+		case 80: //KEY DOWN
+			shiftGrid('S');
+			keyPressed = true;
+			break;
+		case 77: //KEY RIGHT
+			shiftGrid('D');
+			keyPressed = true;
+			break;
+		case 110: //KEY 'n' (new game)
+			playAgain = "";
+			cout << endl << " Are you sure you want to start a new game?" << endl;
+			while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+				cout << " New Game? (Y/N) ";
+				cin >> playAgain;
+				int responseLength = playAgain.length();
+				for (int i = 0; i < responseLength; i++) {
+					playAgain.at(i) = toupper(playAgain.at(i));
 				}
-				if (playAgain == "Y" || playAgain == "YES") {
-					saveBestScore();
-					cout << endl;
-					return 1; // play again
+				cout << endl;
+			}
+			if (playAgain == "Y" || playAgain == "YES") {
+				saveBestScore();
+				cout << endl;
+				return 1; // play again
+				keyPressed = true;
+			}
+			else { // clear questions by reprinting board
+				printBoard();
+			}
+			break;
+		case 117: //KEY 'u' (undo)
+			playAgain = "";
+			cout << endl << " Are you sure you want to undo?" << endl;
+			while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+				cout << " Undo? (Y/N) ";
+				cin >> playAgain;
+				int responseLength = playAgain.length();
+				for (int i = 0; i < responseLength; i++) {
+					playAgain.at(i) = toupper(playAgain.at(i));
+				}
+				cout << endl;
+			}
+			if (playAgain == "Y" || playAgain == "YES") {
+				if (board != boardCopy) { // haven't already used backup
+					board = boardCopy;
+					printBoard();
 					keyPressed = true;
 				}
-				else { // clear questions by reprinting board
-					printBoard();
+				else {
+					cout << "Sorry. You may not undo any further." << endl;
 				}
-				break;
-			case 117: //KEY 'u' (undo)
-				playAgain = "";
-				cout << endl << " Are you sure you want to undo?" << endl;
-				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-					cout << " Undo? (Y/N) ";
-					cin >> playAgain;
-					int responseLength = playAgain.length();
-					for (int i = 0; i < responseLength; i++) {
-						playAgain.at(i) = toupper(playAgain.at(i));
-					}
-					cout << endl;
-				}
-				if (playAgain == "Y" || playAgain == "YES") {
-					if (board != boardCopy) { // haven't already used backup
-						board = boardCopy;
-						printBoard();
-						keyPressed = true;
-					}
-					else {
-						cout << "Sorry. You may not undo any further." << endl;
-					}
-				}
-				else { // clear questions by reprinting board
-					printBoard();
-				}
-				break;
-			default:
-				break;
 			}
+			else { // clear questions by reprinting board
+				printBoard();
+			}
+			break;
+		default:
+			break;
 		}
-	#else
-		/* Alternate method using cin instead of _getch (WASD): */
-		string playAgain;
-		bool keyPressed = false;
-		while (!keyPressed) {
-			cout << "Choose a direction (WASD): ";
-			char dir;
-			cin >> dir;
-			dir = toupper(dir);
-			if (dir == 'N') {
-				playAgain = "";
-				cout << endl << " Are you sure you want to start a new game?" << endl;
-				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-					cout << " New Game? (Y/N) ";
-					cin >> playAgain;
-					int responseLength = playAgain.length();
-					for (int i = 0; i < responseLength; i++) {
-						playAgain.at(i) = toupper(playAgain.at(i));
-					}
-					cout << endl;
+	}
+#else
+	/* Alternate method using cin instead of _getch (WASD): */
+	string playAgain;
+	bool keyPressed = false;
+	while (!keyPressed) {
+		cout << "Choose a direction (WASD): ";
+		char dir;
+		cin >> dir;
+		dir = toupper(dir);
+		if (dir == 'N') {
+			playAgain = "";
+			cout << endl << " Are you sure you want to start a new game?" << endl;
+			while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+				cout << " New Game? (Y/N) ";
+				cin >> playAgain;
+				int responseLength = playAgain.length();
+				for (int i = 0; i < responseLength; i++) {
+					playAgain.at(i) = toupper(playAgain.at(i));
 				}
-				if (playAgain == "Y" || playAgain == "YES") {
-					saveBestScore();
-					cout << endl;
-					return 1; // play again
-					keyPressed = true;
-				}
-				else { // clear questions by reprinting board
-					printBoard();
-				}
+				cout << endl;
 			}
-			else if (dir == 'U') {
-				playAgain = "";
-				cout << endl << " Are you sure you want to undo?" << endl;
-				while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
-					cout << " Undo? (Y/N) ";
-					cin >> playAgain;
-					int responseLength = playAgain.length();
-					for (int i = 0; i < responseLength; i++) {
-						playAgain.at(i) = toupper(playAgain.at(i));
-					}
-					cout << endl;
-				}
-				if (playAgain == "Y" || playAgain == "YES") {
-					if (board != boardCopy) { // haven't already used backup
-						board = boardCopy;
-						printBoard();
-						keyPressed = true;
-					}
-					else {
-						cout << "Sorry. You may not undo any further." << endl;
-					}
-				}
-				else { // clear questions by reprinting board
-					printBoard();
-				}
-			}
-			else if (dir == 'W' || dir == 'A' || dir == 'S' || dir == 'D') {
-				shiftGrid(dir);
+			if (playAgain == "Y" || playAgain == "YES") {
+				saveBestScore();
+				cout << endl;
+				return 1; // play again
 				keyPressed = true;
 			}
+			else { // clear questions by reprinting board
+				printBoard();
+			}
 		}
+		else if (dir == 'U') {
+			playAgain = "";
+			cout << endl << " Are you sure you want to undo?" << endl;
+			while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+				cout << " Undo? (Y/N) ";
+				cin >> playAgain;
+				int responseLength = playAgain.length();
+				for (int i = 0; i < responseLength; i++) {
+					playAgain.at(i) = toupper(playAgain.at(i));
+				}
+				cout << endl;
+			}
+			if (playAgain == "Y" || playAgain == "YES") {
+				if (board != boardCopy) { // haven't already used backup
+					board = boardCopy;
+					printBoard();
+					keyPressed = true;
+				}
+				else {
+					cout << "Sorry. You may not undo any further." << endl;
+				}
+			}
+			else { // clear questions by reprinting board
+				printBoard();
+			}
+		}
+		else if (dir == 'W' || dir == 'A' || dir == 'S' || dir == 'D') {
+			shiftGrid(dir);
+			keyPressed = true;
+		}
+	}
 
-	#endif
+#endif
 
 	return 0; // continue playing
 }
