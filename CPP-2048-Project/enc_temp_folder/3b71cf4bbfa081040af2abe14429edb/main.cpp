@@ -60,7 +60,7 @@ void theBoard::printBoard() {
 	}
 	cout << "--------+" << endl;
 	// score line:
-	if (scoreBoxLength > 9 * gridSize - 2) { // if text is longer than grid
+	if (scoreBoxLength > 9 * gridSize - 2) { // doesn't fit above grid
 		// collapse to 3 lines:
 		for (int j = 0; j < 3; j++) {
 			switch (j) {
@@ -75,8 +75,9 @@ void theBoard::printBoard() {
 			}
 			cout << "  | " << endl;
 		}
+
 	}
-	else { // if it fits in one line
+	else { // fits in one line
 		cout << " |";
 		cout << scoreBox;
 		if (scoreBoxLength < (9 * gridSize)) {
