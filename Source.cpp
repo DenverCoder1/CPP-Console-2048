@@ -1,4 +1,4 @@
-﻿// 2048 main file - Arrow keys (Windows) and WASD (Unix)
+// 2048 main file - Arrow keys (Windows) and WASD (Unix)
 // 
 
 #include "iostream"
@@ -87,25 +87,17 @@ void theBoard::printBoard() {
 			if (currentCell == "0") { // show nothing if zero
 				currentRow += "          ";
 			}
-			// different spacing depending on num of digits:
-			else if (currentCell.length() == 1) {
-				currentRow += "     " + currentCell + "    ";
-			}
-			else if (currentCell.length() == 2) {
-				currentRow += "    " + currentCell + "    ";
-			}
-			else if (currentCell.length() == 3) {
-				currentRow += "    " + currentCell + "   ";
-			}
-			else if (currentCell.length() == 4) {
-				currentRow += "   " + currentCell + "   ";
-			}
-			else if (currentCell.length() == 5) {
-				currentRow += "   " + currentCell + "  ";
-			}
+			// different spacing depending on number of digits: (10 chars with number in center (or slightly to the right)
 			else {
+				for (int spaces = 0; spaces < ((10 - currentCell.length()) / 2.0); spaces++) { // left spaces (if 2 digit, 4 left spaces; if 1 digit 5 left spaces)
+					currentRow += " ";
+				}
 				currentRow += currentCell;
+				for (int spaces = 0; spaces < ((10 - currentCell.length()) / 2); spaces++) { // right spaces (if 2 digit, 4 right spaces; if 1 digit 4 right spaces)
+					currentRow += " ";
+				}
 			}
+
 			currentRow += "|";
 		}
 		cout << " |";
