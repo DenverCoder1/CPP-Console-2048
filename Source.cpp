@@ -9,21 +9,16 @@
 #include "fstream" // for saving highscore
 using namespace std;
 
-#ifdef __unix__
-int _getch() { return 0; } // overload _getch() to return false
-void clearScreen() {
-	cout << string(50, '\n');
-	//system("clear");
-}
-#elif defined(_WIN32) || defined(WIN32)
-#include "conio.h" // for arrow keys (_getch)
-void clearScreen() {
-	system("CLS");
-}
+#if defined(_WIN32) || defined(WIN32)
+	#include "conio.h" // for arrow keys (_getch)
+	void clearScreen() {
+		system("CLS");
+	}
 #else
-void clearScreen() {
-	system("clear||CLS");
-}
+	void clearScreen() {
+		//cout << string(50, '\n');
+		system("clear||CLS");
+	}
 #endif
 
 typedef vector <int> boardRow; // one row as vector
@@ -142,6 +137,7 @@ int theBoard::checkIfGameOver() {
 			for (int i = 0; i < responseLength; i++) {
 				playAgain.at(i) = toupper(playAgain.at(i));
 			}
+			cout << endl;
 		}
 		if (playAgain == "Y" || playAgain == "YES") {
 			printBoard();
@@ -177,6 +173,7 @@ int theBoard::checkIfGameOver() {
 				for (int i = 0; i < responseLength; i++) {
 					playAgain.at(i) = toupper(playAgain.at(i));
 				}
+				cout << endl;
 			}
 			if (playAgain == "Y" || playAgain == "YES") {
 				return 1; // play again
@@ -194,7 +191,7 @@ void theBoard::shiftGrid(char dir) {
 	boardCopy = board; // create backup of board
 	bool nothingMoved = true; // if no moves, won't add a number
 	// SHIFT UP:
-	if (dir == 'U') {
+	if (dir == 'W') {
 		//shift up to 3 times to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from bottom to top
 			for (int j = 0; j < gridSize - 1; j++) { // ex. row 1 -> 3
@@ -230,7 +227,7 @@ void theBoard::shiftGrid(char dir) {
 		}
 	}
 	// SHIFT RIGHT:
-	else if (dir == 'R') {
+	else if (dir == 'D') {
 		//shift up to 3 times to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from top to bottom
 			for (int i = gridSize - 1; i > 0; i--) { // ex. col 4 -> 2
@@ -266,7 +263,7 @@ void theBoard::shiftGrid(char dir) {
 		}
 	}
 	// SHIFT DOWN:
-	else if (dir == 'D') {
+	else if (dir == 'S') {
 		//shift up to 3 times to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from top to bottom
 			for (int j = gridSize - 1; j > 0; j--) { // ex. row 4 -> 2
@@ -302,7 +299,7 @@ void theBoard::shiftGrid(char dir) {
 		}
 	}
 	// SHIFT LEFT:
-	else if (dir == 'L') {
+	else if (dir == 'A') {
 		//shift up to 3 times to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from top to bottom
 			for (int i = 0; i < gridSize - 1; i++) { // ex. col 1 -> 3
@@ -358,7 +355,7 @@ void theBoard::shiftGrid(char dir) {
 }
 
 int theBoard::beginMove() {
-	if (_getch()) { // if able to run _getch
+	#if defined(_WIN32) || defined(WIN32)
 		/* Non-standard input method using <conio.h> and _getch(): */
 		string playAgain;
 		bool keyPressed = false;
@@ -366,19 +363,19 @@ int theBoard::beginMove() {
 		while (!keyPressed) {
 			switch (_getch()) { // wait for key to be pressed
 			case 72: //KEY UP
-				shiftGrid('U');
-				keyPressed = true;
-				break;
-			case 77: //KEY RIGHT
-				shiftGrid('R');
-				keyPressed = true;
-				break;
-			case 80: //KEY DOWN
-				shiftGrid('D');
+				shiftGrid('W');
 				keyPressed = true;
 				break;
 			case 75: //KEY LEFT
-				shiftGrid('L');
+				shiftGrid('A');
+				keyPressed = true;
+				break;
+			case 80: //KEY DOWN
+				shiftGrid('S');
+				keyPressed = true;
+				break;
+			case 77: //KEY RIGHT
+				shiftGrid('D');
 				keyPressed = true;
 				break;
 			case 110: //KEY 'n' (new game)
@@ -391,6 +388,7 @@ int theBoard::beginMove() {
 					for (int i = 0; i < responseLength; i++) {
 						playAgain.at(i) = toupper(playAgain.at(i));
 					}
+					cout << endl;
 				}
 				if (playAgain == "Y" || playAgain == "YES") {
 					saveBestScore();
@@ -409,6 +407,7 @@ int theBoard::beginMove() {
 					for (int i = 0; i < responseLength; i++) {
 						playAgain.at(i) = toupper(playAgain.at(i));
 					}
+					cout << endl;
 				}
 				if (playAgain == "Y" || playAgain == "YES") {
 					if (board != boardCopy) { // haven't already used backup
@@ -425,8 +424,7 @@ int theBoard::beginMove() {
 				break;
 			}
 		}
-	}
-	else {
+	#else
 		/* Alternate method using cin instead of _getch (WASD): */
 		string playAgain;
 		bool keyPressed = false;
@@ -445,6 +443,7 @@ int theBoard::beginMove() {
 					for (int i = 0; i < responseLength; i++) {
 						playAgain.at(i) = toupper(playAgain.at(i));
 					}
+					cout << endl;
 				}
 				if (playAgain == "Y" || playAgain == "YES") {
 					saveBestScore();
@@ -463,6 +462,7 @@ int theBoard::beginMove() {
 					for (int i = 0; i < responseLength; i++) {
 						playAgain.at(i) = toupper(playAgain.at(i));
 					}
+					cout << endl;
 				}
 				if (playAgain == "Y" || playAgain == "YES") {
 					if (board != boardCopy) { // haven't already used backup
@@ -476,14 +476,14 @@ int theBoard::beginMove() {
 				}
 			}
 			else if (dir == 'W' || dir == 'A' || dir == 'S' || dir == 'D') {
-				dir = dir == 'W' ? 'U' : dir == 'A' ? 'L' : dir == 'S' ? 'D' : dir == 'D' ? 'R' : dir; // convert WASD to ULDR:
 				shiftGrid(dir);
 				keyPressed = true;
 			}
 		}
 	}
+	#endif
 
-	return 0; // continue playing
+return 0; // continue playing
 }
 
 void theBoard::setup() {
