@@ -1,23 +1,26 @@
-// 2048 main file - Arrow keys (Windows) and WASD (Unix)
+// C++ 2048 game
+// Join the numbers and get to the 2048 tile!
+// Use your arrow keys (Windows) or WASD (Unix) to move the tiles.
+// When two tiles with the same number touch, they merge into one!
+// Yonah Lawrence
+// October 2018
 // 
 
-#include "iostream"
-#include "string"
-#include "vector" // to store grid values
-#include "ctime" // for better rng
-#include "climits" // for INT_MAX in int validation
-#include "fstream" // for saving highscore
+#include <iostream>
+#include <string>
+#include <vector> // to store grid values
+#include <ctime> // for better rng
+#include <fstream> // for saving highscore
 using namespace std;
 
 #if defined(_WIN32) || defined(WIN32)
-#include "conio.h" // for arrow keys (_getch)
+#include <conio.h> // for arrow keys (_getch)
 void clearScreen() {
 	system("CLS");
 }
 #else
 void clearScreen() {
 	cout << string(50, '\n');
-	//system("clear||CLS");
 }
 #endif
 
@@ -38,10 +41,35 @@ public:
 	int checkIfGameOver(); // check if no moves or got first 2048 tile
 	void shiftGrid(char dir); // change grid by moving U, D, L, or R
 	int beginMove(); // wait for input
+	void insertNewNumber(); // add a 2 or 4 to a random spot on board
 	void setup(); // ask for grid size, set up grid
 	void readBestScore(); // set bestScore variable to score from bestscore.txt file
 	void saveBestScore(); // output bestScore to bestscore.txt file
 };
+
+int main() {
+	srand((unsigned int)time(nullptr)); // initialize random seed
+	theBoard newBoard; // create object "newBoard" with class "theBoard"
+	newBoard.setup(); // call function to set up game
+	int GameOver = 0;
+	newBoard.readBestScore();
+	while (true) {
+		// print board:
+		newBoard.printBoard(); // output grid
+		GameOver = newBoard.checkIfGameOver(); // check if won or lost (returns 0:continue, 1:new game, or -1:exit)
+		if (GameOver == 0) { // continue playing
+			GameOver = newBoard.beginMove(); // wait for input (returns 0:continue or 1:new game)
+		}
+		if (GameOver == 1) { // new game
+			clearScreen(); // clear screen
+			newBoard.setup();
+		}
+		else if (GameOver == -1) { // exit
+			break;
+		}
+	}
+	return 0;
+}
 
 void theBoard::printBoard() {
 	clearScreen(); // clear screen
@@ -152,21 +180,21 @@ int theBoard::checkIfGameOver() {
 	if (maxValue == 2048 && alreadyWon == false) {
 		alreadyWon = true;
 		cout << endl << " You won!" << endl;
-		string playAgain;
-		while (playAgain != "Y" && playAgain != "N" && playAgain != "YES" && playAgain != "NO") {
+		string keepPlaying;
+		while (keepPlaying != "Y" && keepPlaying != "N" && keepPlaying != "YES" && keepPlaying != "NO") {
 			cout << " Continue? (Y/N) ";
-			cin >> playAgain;
-			int responseLength = playAgain.length();
+			cin >> keepPlaying;
+			int responseLength = keepPlaying.length();
 			for (int i = 0; i < responseLength; i++) {
-				playAgain.at(i) = toupper(playAgain.at(i));
+				keepPlaying.at(i) = toupper(keepPlaying.at(i));
 			}
 			cout << endl;
 		}
-		if (playAgain == "Y" || playAgain == "YES") {
+		if (keepPlaying == "Y" || keepPlaying == "YES") {
 			printBoard();
 			return 0; // continue playing
 		}
-		else if (playAgain == "N" || playAgain == "NO") {
+		else if (keepPlaying == "N" || keepPlaying == "NO") {
 			return 1; // play again
 		}
 	}
@@ -185,7 +213,7 @@ int theBoard::checkIfGameOver() {
 				}
 			}
 		}
-		if (!hasAMove) { // to do: print board before end
+		if (!hasAMove) {
 			cout << endl << " Game Over!" << endl;
 			saveBestScore();
 			string playAgain;
@@ -210,12 +238,12 @@ int theBoard::checkIfGameOver() {
 }
 
 void theBoard::shiftGrid(char dir) {
-	boardGrid boardCopyCopy = boardCopy; // create backup of backup in case no move is made
+	boardGrid boardCopyCopy = boardCopy; // create backup of backup in case no movement is made
 	boardCopy = board; // create backup of board
 	bool nothingMoved = true; // if no moves, won't add a number
 	// SHIFT UP:
 	if (dir == 'W') {
-		//shift up to 3 times to empty if possible
+		//shift up to 3 times (assuming 4x4) to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from bottom to top
 			for (int j = 0; j < gridSize - 1; j++) { // ex. row 1 -> 3
 				for (int i = 0; i < gridSize; i++) { // ex. col 1 -> 4
@@ -251,7 +279,7 @@ void theBoard::shiftGrid(char dir) {
 	}
 	// SHIFT RIGHT:
 	else if (dir == 'D') {
-		//shift up to 3 times to empty if possible
+		//shift up to 3 times (assuming 4x4) to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from top to bottom
 			for (int i = gridSize - 1; i > 0; i--) { // ex. col 4 -> 2
 				for (int j = 0; j < gridSize; j++) { // ex. row 1 -> 4
@@ -287,7 +315,7 @@ void theBoard::shiftGrid(char dir) {
 	}
 	// SHIFT DOWN:
 	else if (dir == 'S') {
-		//shift up to 3 times to empty if possible
+		//shift up to 3 times (assuming 4x4) to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from top to bottom
 			for (int j = gridSize - 1; j > 0; j--) { // ex. row 4 -> 2
 				for (int i = 0; i < gridSize; i++) { // ex. col 1 -> 4
@@ -323,7 +351,7 @@ void theBoard::shiftGrid(char dir) {
 	}
 	// SHIFT LEFT:
 	else if (dir == 'A') {
-		//shift up to 3 times to empty if possible
+		//shift up to 3 times (assuming 4x4) to empty if possible
 		for (int k = 0; k < gridSize - 1; k++) { // loop (gridSize - 1) times to go from top to bottom
 			for (int i = 0; i < gridSize - 1; i++) { // ex. col 1 -> 3
 				for (int j = 0; j < gridSize; j++) { // ex. row 1 -> 4
@@ -360,14 +388,7 @@ void theBoard::shiftGrid(char dir) {
 
 	// generate new number and add to board:
 	if (!nothingMoved) { // if something moved
-		int tempRow = rand() % gridSize;
-		int tempCol = rand() % gridSize;
-		do {
-			tempRow = rand() % gridSize;
-			tempCol = rand() % gridSize;
-		} while (board[tempRow][tempCol] >= 2); // make sure random location is empty
-		int startInt = (rand() % 10 < 9) ? 2 : 4; // 10% chance of 4
-		board[tempRow][tempCol] = startInt;
+		insertNewNumber(); // insert 2 or 4 at random
 		moves++; // add 1 to moves
 	}
 	else { // if nothing moved
@@ -386,18 +407,22 @@ int theBoard::beginMove() {
 	while (!keyPressed) {
 		switch (_getch()) { // wait for key to be pressed
 		case 72: //KEY UP
+		case 113: // KEY W
 			shiftGrid('W');
 			keyPressed = true;
 			break;
 		case 75: //KEY LEFT
+		case 97: // KEY A
 			shiftGrid('A');
 			keyPressed = true;
 			break;
 		case 80: //KEY DOWN
+		case 115: // KEY S
 			shiftGrid('S');
 			keyPressed = true;
 			break;
 		case 77: //KEY RIGHT
+		case 100: // KEY D
 			shiftGrid('D');
 			keyPressed = true;
 			break;
@@ -521,13 +546,33 @@ int theBoard::beginMove() {
 	return 0; // continue playing
 }
 
+void theBoard::insertNewNumber() {
+	// collect a list of all available cells
+	vector <int> availableSquares;
+	for (int i = 0; i < gridSize; i++) {
+		for (int j = 0; j < gridSize; j++) {
+			if (board[i][j] < 2) { // if empty square
+				availableSquares.push_back(i * gridSize + j);
+			}
+		}
+	}
+
+	int cell = availableSquares[rand() % availableSquares.size()]; // choose random available cell
+
+	board[cell / gridSize][cell % gridSize] = (rand() % 10 < 9) ? 2 : 4; // 10% chance of 4, 90% chance of 2
+}
+
 void theBoard::setup() {
 	score = 0;
 	moves = 0;
 	gridSize = 0;
 	alreadyWon = false;
 	cout << " Join the numbers and get to the 2048 tile!" << endl;
-	cout << " HOW TO PLAY: Use your arrow keys to move the tiles." << endl;
+#if defined(_WIN32) || defined(WIN32)
+	cout << " HOW TO PLAY: Use your arrow keys or WASD to move the tiles." << endl;
+#else
+	cout << " HOW TO PLAY: Use WASD input to move the tiles." << endl;
+#endif
 	cout << " When two tiles with the same number touch, they merge into one!" << endl;
 	cout << " Press \"n\" to start a new game or \"u\" to undo." << endl << endl;
 	while (true) {
@@ -539,7 +584,7 @@ void theBoard::setup() {
 		else {
 			cout << " Please enter a valid positive integer between 2 and 16." << endl;
 			cin.clear();
-			cin.ignore(INT_MAX, '\n');
+			cin.ignore();
 		}
 	}
 
@@ -548,31 +593,14 @@ void theBoard::setup() {
 
 	// create first 2 numbers:
 	for (int k = 0; k < 2; k++) {
-		int tempRow = rand() % gridSize;
-		int tempCol = rand() % gridSize;
-		int i = 0;
-		do {
-			tempRow = rand() % gridSize;
-			tempCol = rand() % gridSize;
-			i++;
-		} while (board[tempRow][tempCol] >= 2); // // set bestScore to score if score is larger
-		int startInt = (rand() % 10 < 9) ? 2 : 4; // 10% chance of 4
-		board[tempRow][tempCol] = startInt;
+		insertNewNumber(); // insert 2 or 4 at random
 	}
 }
 
 void theBoard::readBestScore() {
-	string bestScoreString = "";
-	char letter;
 	ifstream fileIn("bestscore.txt");
 	if (fileIn) {
-		for (int i = 0; !fileIn.eof(); i++) {
-			fileIn.get(letter);
-			bestScoreString += letter;
-		}
-		if (bestScoreString.size() > 1) { // not blank file
-			bestScore = stoi(bestScoreString);
-		}
+		fileIn >> bestScore; // read bestScore from file
 		fileIn.close();
 	}
 }
@@ -583,29 +611,4 @@ void theBoard::saveBestScore() {
 		fileOut << bestScore << endl; // write bestScore to file
 		fileOut.close();
 	}
-}
-
-int main() {
-	srand((unsigned int)time(NULL)); // reset timer for better rng
-	theBoard newBoard; // create object "newBoard" with class "theBoard"
-	newBoard.setup(); // call function to set up game
-	int GameOver = 0;
-	newBoard.readBestScore();
-	while (true) {
-		// print board:
-		newBoard.printBoard(); // output grid
-		GameOver = newBoard.checkIfGameOver(); // check if won or lost (returns 0:continue, 1:new game, or -1:exit)
-		if (GameOver == 0) { // continue playing
-			GameOver = newBoard.beginMove(); // wait for input (returns 0:continue or 1:new game)
-		}
-		if (GameOver == 1) { // new game
-			clearScreen(); // clear screen
-			newBoard.setup();
-		}
-		else if (GameOver == -1) { // exit
-			break;
-		}
-	}
-
-	return 0;
 }
